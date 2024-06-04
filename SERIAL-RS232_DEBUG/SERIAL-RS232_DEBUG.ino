@@ -192,18 +192,16 @@ void loop() {
               msg[c_ctr] = request;
                my_char = String((char)request);
               timeold_end = millis();
-              Serial.write(msg, sizeof(c_ctr));
-              Serial.print(my_char);
+              //Serial.write(msg, sizeof(c_ctr));
+              //Serial.print(my_char);
               c_ctr++;
-              // criar meio o dado e colocar no vetor em ordem
-              objetivo é criar um vetor que possa ser comparado
-              com o dado recebido.
-              
-              
+           
      }  //END while (Serial.available())
-    c_ctr  = 0;
+    //c_ctr  = 0;
     
     if (millis() - timeold_end >= 1000){   // LIMPA TUDO A CADA 1 S SEM COMUNICAÇÃO
+          Serial.write(msg, sizeof(c_ctr));
+          Serial.print(my_char);
           timeold_end = millis();
           str.remove(0, str.length());
           limparVetor();
