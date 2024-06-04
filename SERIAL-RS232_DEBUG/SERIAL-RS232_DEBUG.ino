@@ -156,6 +156,7 @@ byte msg_reC79[] = {0x00};
 
 int       byteRead = 0;// variavel que inicia processo de comunicação
 int       c_ctr  = 0;
+int cont_partida = 0;
 const int length    = 72;
 char      buffer[length];
 byte      msg[length]; // msg convertida em numeros
@@ -166,56 +167,123 @@ unsigned long timeold           = 0,        // Variavel conta tempo em milis con
 
 // =================================================================================
 // --- Protótipo das Funções        ---
-void limparVetor  ();
+void limparVetor        ();
+void rotina_de_partida  ();
 
 // =================================================================================
 // --- Configurações setup       ---
 void setup (){
   Serial.begin(9600);
+  delay(1000);
+  
 
 } // END void setup ()
 // =================================================================================
 // --- Loop Infinito                ---
 void loop() {
-  if (byteRead == 0) { 
-      //Serial.write(0x00 );
-      //delay(10);
-      //Serial.write(0x41 );
-      //Serial.write(0x21 );
-      //delay(10);
-     //Serial.write(msg1, sizeof(msg1));
-      byteRead = 1;
-  } // END IF
-  
-  while (Serial.available() ) {
+  // rotina de partida do sistema de comunicação
+  // tirei do setup e deixei aqui no loop 
+ if (cont_partida == 0){
+     rotina_de_partida ();
+     cont_partida = 1;
+ }
+ 
+  while (Serial.available() > 0) {
         byte  request = Serial.read();
               msg[c_ctr] = request;
-               my_char = String((char)request);
+              my_char = String((char)request);
               timeold_end = millis();
-              //Serial.write(msg, sizeof(c_ctr));
-              //Serial.print(my_char);
               c_ctr++;
-           
+              // proteger estourar o vetor
+              if (c_ctr >=  length){// boa prática de programa
+                  c_ctr = length - 1;
+              }
+              
      }  //END while (Serial.available())
-    //c_ctr  = 0;
-    
+  //OK proxima fase definir o melhor método de gatilho 
+  //OK validar o metodo de percorrer o vetor de forma rápida
+  // TENTANDO COM IF E FOR  criar metodo de comparar vetor entrada com resposta pre-definida
+    // CONSIDERO CRIAR UM CASE NO FUTURO
+  // medir tempo  de resposta igual ao computador utilizando write
+  // ao usar print demora 4 vezes mais.
+  // criar condição que ao responder o vetor uma vez se eu enviar novamente
+  // por exemplo o hexa 23 não poderá responder.
+  // ou se no meio do vetor tiver 23 nao responder
+/*
+inicia o role
+	{0x00}; 
+	10ms
+	{0x41,0x21};
+RECEBER
+	{0x23};
+responde
+	{0x40};
+RECEBER
+ 	{0x00};
+responde
+	{0x00,0x42};
+	10ms
+	{0x00,0x50,0x43,0x6F,0x6E,0x65,0x78,0x61,0x6F,0x20,0x63,0x6F,0x72,0x72,0x65,0x74,0x61,0x20};
+	10ms
+	{0x00,0x04};
+parei aqui
+
+se receber
+{0x35,0x2E,0x35,0x4A,0x32,0x30,0x31,0x39};
+responde
+{0x00,0x4E,0x0A,0x30,0x0A,0x30};
+se receber
+ {0x00};
+responde
+{0x00,0x4E,0x0A,0x00,0x0A,0x00};
+
+
+
+
+
+*/
     if (millis() - timeold_end >= 1000){   // LIMPA TUDO A CADA 1 S SEM COMUNICAÇÃO
-          Serial.write(msg, sizeof(c_ctr));
-          Serial.print(my_char);
+        for (size_t i = 0; i < c_ctr; i++) { // debug vetor recebido
+          //Serial.write(msg[i]);
+        } // fim debug recebido
+        for (size_t i = 0; i < c_ctr; i++) {
+          // criei uma lista de vetores com cada resposta em sequencia.
+        // tem que colocar condição de fazer so uma vez
+          if (msg[i] == msg_rec01[0]){ // se receber 0x23 responder 0x40
+            Serial.write(msg_boot3, sizeof(msg_boot3)); //{0x40};
+          }
+        // tem que colocar condição de fazer so uma vez
+          if (msg[i] == msg_rec02[0]){ // msg_rec02[] = {0x00};se receber 0x00 responder {0x00,0x42};
+            Serial.write(msg_boot4, sizeof(msg_boot4)); // {0x00,0x42};
+            delay(10); 
+            Serial.write(msg_boot5, sizeof(msg_boot5));
+            Serial.flush();
+            delay(10); //msg_boot6
+            Serial.write(msg_boot6, sizeof(msg_boot6));
+          }
+        } // END FOR
+        // limpa vetor
           timeold_end = millis();
-          str.remove(0, str.length());
+          my_char.remove(0, my_char.length());
           limparVetor();
           c_ctr  = 0;
        }
   /*
-simulador
-0x0D 10ms 0x410x21
-resposta
+vetor recebido
+1    2    3    4    5    6    7
+
+DISPARADO
+1    2    3    4    5    6    7
+0x01 0xF5 0x02 0x0C 0x02 0x15 0x0D
                   0x23
   */
 } // END void loop()
 // =================================================================================
- 
+void rotina_de_partida (){ // rotina validade
+  Serial.write(msg_boot1, sizeof(msg_boot1));//{0x00};
+  delay(10);
+  Serial.write(msg_boot2, sizeof(msg_boot2));//{0x41,0x21};
+} //void rotina_de_partida (){
               
 void limparVetor() {
       for (size_t i = 0; i < length; i++) msg[i] = ' ';
