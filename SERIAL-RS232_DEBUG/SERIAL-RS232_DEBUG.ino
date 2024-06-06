@@ -64,9 +64,9 @@ byte msg_bot42 [] = {0x0D,0x4E,0x0A,0x30,0x0A,0x30};
 byte msg_bot43 [] = {0x0D,0x44};
 byte msg_bot44 [] = {0x0D,0x57};
 byte msg_bot45 [] = {0x0D,0x45};
-byte msg_bot46 [] = {0x0D,0x30,0x11,0x32,0x1B,0x05,0x18}; // ANALISAR UMIDADE
+byte msg_bot46 [] = {0x0D,0x30,0x10,0x15,0x05,0x06,0x18}; // ANALISAR UMIDADE
 byte msg_bot47 [] = {0x0D,0x50,0x41,0x6E,0x61,0x6C,0x69,0x73,0x61,0x72,0x20,0x55,0x6D,0x69,0x64,0x61,0x64,0x65};
-byte msg_bot48 [] = {0x0D,0x50,0x41,0x6E,0x61,0x6C,0x69,0x73,0x61,0x72,0x20,0x55,0x6D,0x69,0x64,0x61,0x64,0x65};
+byte msg_bot48 [] = {0x0D,0x30,0x0F,0x1B,0x06,0x06,0x18};
 byte msg_bot49 [] = {0x0D,0x42};
 
 
@@ -156,6 +156,10 @@ unsigned long timeold           = 0,        // Variavel conta tempo em milis con
 void limparVetor        ();
 void rotina_de_partida  ();
 void rotina_conexao     ();
+void rotina_manut       ();
+
+void msg_0x23           ();
+void msg_0x35           ();
 
 // =================================================================================
 // --- Configurações setup       ---
@@ -180,9 +184,9 @@ while (Serial.available() > 0) {
       c_ctr++;
       if (c_ctr >=  length) c_ctr = length - 1; // proteger estourar o vetor
 }  //END while (Serial.available())
-// testa as mensagens recebidas fora do while
-// essa solução ganha velocidade
-rotina_conexao     ();
+
+if (cont_partida <= 8)  rotina_conexao     ();
+if(cont_partida >=10 )  rotina_manut       ();
   // CONSIDERO CRIAR UM CASE NO FUTURO
 if (millis() - timeold_end >= 5000){   // LIMPA TUDO A CADA 1 S SEM COMUNICAÇÃO
     for (size_t i = 0; i < c_ctr; i++) //Serial.write(msg[i]); // DEBUG
@@ -195,175 +199,275 @@ if (millis() - timeold_end >= 5000){   // LIMPA TUDO A CADA 1 S SEM COMUNICAÇÃ
 
 } // END void loop()
 // =================================================================================
+void rotina_manut       (){
+    for (size_t i = 0; i < c_ctr; i++) {
+      if (msg[i] == 0x0D && cont_partida == 10){
+          cont_partida = 11;
+          delay(15);
+          Serial.write(msg_bot47, sizeof(msg_bot47));
+          Serial.flush();
+          delay(1500);
+          i = c_ctr;
+          limparVetor();
+        }
+        if (msg[i] == 0x0D && cont_partida == 11){
+          cont_partida = 12;
+          delay(50);
+          Serial.write(0x0D); //{0x41,0x21};
+          Serial.write(0x42);
+          delay(1500);
+          i = c_ctr;
+          limparVetor();
+        }
+        if (msg[i] == 0x0D && cont_partida == 12){
+          cont_partida = 13;
+          delay(1500);
+          Serial.write(0x0D); 
+          Serial.write(0x44);
+          i = c_ctr;
+          limparVetor();
+        }
+        if (msg[i] == 0x01 && cont_partida == 13){
+          cont_partida = 14;
+          delay(50);
+          Serial.write(0x0D); 
+          Serial.write(0x57);
+          i = c_ctr;
+          limparVetor();
+        }
+        if (msg[i] == 0x01 && cont_partida == 14){
+          cont_partida = 15;
+          delay(50);
+          Serial.write(0x0D); 
+          Serial.write(0x45);
+          i = c_ctr;
+          limparVetor();
+        }
+        if (msg[i] == 0x01 && cont_partida == 15){
+          cont_partida = 16;
+          Serial.write(msg_bot48, sizeof(msg_bot48));
+          Serial.flush();
+          delay(1500);
+          i = c_ctr;
+          limparVetor();
+        }
+        if (msg[i] == 0x0D && cont_partida == 16){
+          cont_partida = 13;
+          delay(1500);
+          Serial.write(0x0D); //{0x41,0x21};
+          Serial.write(0x44);
+          i = c_ctr;
+          limparVetor();
+        }
+
+    }// END for
+    
+}// END void rotina_manut       ()
+ 
 void rotina_conexao() {
     for (size_t i = 0; i < c_ctr; i++) {
         // criei uma lista de vetores com cada resposta em sequencia.
-        if (msg[i] == 0xA2 && cont_partida == 0) { // se receber 0x23 responder 0x40
-            Serial.write(0x0D);//{0x00};
+        // condição temporaria para desenvolvimento
+        if (msg[i] == 0xA2) { // envia disparo via COM
+            cont_partida = 1;
+            Serial.write(0x0D); //{0x00};
             delay(10);
-            Serial.write(0x41);//{0x41,0x21};
+            Serial.write(0x41); //{0x41,0x21};
             Serial.write(0x21);
             msg[i] = 0xA3;
-            cont_partida = 1;
+            i = c_ctr;
+            limparVetor();
         }
         if (msg[i] == 0x23 && cont_partida == 1) { // se receber 0x23 responder 0x40
-           delay(10);
-           Serial.write(0x40);
-           msg[i] == 0xA3; // ESTOU COLOCANDO ALGUMA COISA NO LUGAR PARA O IF NAO RODAR DE NOVO
-           cont_partida = 2;
-           delay(10);
-           Serial.write(0x0D);//{0x41,0x21};
-           Serial.write(0x42);
-           delay(10);
-           Serial.write(msg_boot5, sizeof(msg_boot5));
-           Serial.flush(); 
-           delay(140);
-           Serial.write(0x0D);//{0x41,0x21};
-           Serial.write(0x4D);
-           msg[i] == 0xA3; // ESTOU COLOCANDO ALGUMA COISA NO LUGAR PARA O IF NAO RODAR DE NOVO
-          cont_partida = 3;
-         }
-         
-         if (msg[i] == 0x35 && msg[i+1] == 0x2E && cont_partida == 3){
-          cont_partida = 4;
-          delay(9);
-          Serial.write(msg_boot7, sizeof(msg_boot7));
+            cont_partida = 3;
+            msg_0x23();
+            i = c_ctr;
+            limparVetor();
+        }
+        if (msg[i] == 0x35 && msg[i + 1] == 0x2E && cont_partida == 3) {
+            cont_partida = 4;
+            delay(9);
+            msg_0x35();
+            i = c_ctr;
+            limparVetor();
+        }
+        if (msg[i] == 0xFC && msg[i + 1] == 0xFB && cont_partida == 4) {
+            cont_partida = 5;
+            delay(24);
+            Serial.write(msg_bot40, sizeof(msg_bot40));
+            Serial.flush();
+            delay(10);
+            Serial.write(msg_bot41, sizeof(msg_bot41));
+            Serial.flush();
+            delay(10);
+            Serial.write(msg_bot42, sizeof(msg_bot42));
+            Serial.flush();
+            delay(10);
+            Serial.write(msg_bot43, sizeof(msg_bot43));
+            Serial.flush();
+            i = c_ctr;
+            limparVetor();
+        }
+        if (msg[i] == 0x01 && cont_partida == 5){
+          cont_partida = 6;
+          delay(100);
+          Serial.write(0x0D); //{0x41,0x21};
+          Serial.write(0x57);
+          i = c_ctr;
+          limparVetor();
+        }
+        if (msg[i] == 0x01 && cont_partida == 6){
+          cont_partida = 7;
+          delay(100);
+          Serial.write(0x0D); //{0x41,0x21};
+          Serial.write(0x45);
+          i = c_ctr;
+          limparVetor();
+        }
+        if (msg[i] == 0x01 && cont_partida == 7){
+          cont_partida = 10;
+          delay(100);
+          Serial.write(msg_bot46, sizeof(msg_bot46));
           Serial.flush();
-          delay(9); 
-          Serial.write(msg_boot8, sizeof(msg_boot8));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_boot9, sizeof(msg_boot9));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot10, sizeof(msg_bot10));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot11, sizeof(msg_bot11));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot12, sizeof(msg_bot12));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot13, sizeof(msg_bot13));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot14, sizeof(msg_bot14));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot15, sizeof(msg_bot15));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot16, sizeof(msg_bot16));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot17, sizeof(msg_bot17));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot18, sizeof(msg_bot18));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot19, sizeof(msg_bot19));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot20, sizeof(msg_bot20));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot21, sizeof(msg_bot21));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot22, sizeof(msg_bot22));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot23, sizeof(msg_bot23));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot24, sizeof(msg_bot24));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot25, sizeof(msg_bot25));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot26, sizeof(msg_bot26));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot27, sizeof(msg_bot27));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot28, sizeof(msg_bot28));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot29, sizeof(msg_bot29));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot30, sizeof(msg_bot30));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot31, sizeof(msg_bot31));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot32, sizeof(msg_bot32));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot33, sizeof(msg_bot33));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot34, sizeof(msg_bot34));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot35, sizeof(msg_bot35));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot36, sizeof(msg_bot36));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot37, sizeof(msg_bot37));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot38, sizeof(msg_bot38));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot39, sizeof(msg_bot39));
-          Serial.flush(); 
-         }
-         if (msg[i] == 0xFC && msg[i+1] == 0xFB && cont_partida == 4){
-          cont_partida = 5;
-          delay(24);
-          Serial.write(msg_bot40, sizeof(msg_bot40));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot41, sizeof(msg_bot41));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot42, sizeof(msg_bot42));
-          Serial.flush(); 
-          delay(10);
-          Serial.write(msg_bot43, sizeof(msg_bot43));
-          Serial.flush(); 
-         }
-
-         
-         
-         
-         
-         
+          delay(15);
+          Serial.write(msg_bot47, sizeof(msg_bot47));
+          Serial.flush();
+          i = c_ctr;
+          limparVetor();
+        }
     } // END FOR
 } // END void rotina_conexao ()
 // =================================================================================
-
-void rotina_de_partida (){ // rotina validade
-  Serial.write(0x00);//{0x00};
-  delay(10);
-  Serial.write(0x41);//{0x41,0x21};
-  Serial.write(0x21);
+void msg_0x23() {
+    delay(10);
+    Serial.write(0x40);
+    delay(10);
+    Serial.write(0x0D); //{0x41,0x21};
+    Serial.write(0x42);
+    delay(10);
+    Serial.write(msg_boot5, sizeof(msg_boot5));
+    Serial.flush();
+    delay(140);
+    Serial.write(0x0D); //{0x41,0x21};
+    Serial.write(0x4D);
+} // END
+// =================================================================================
+void msg_0x35() {
+    Serial.write(msg_boot7, sizeof(msg_boot7));
+    Serial.flush();
+    delay(9);
+    Serial.write(msg_boot8, sizeof(msg_boot8));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_boot9, sizeof(msg_boot9));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot10, sizeof(msg_bot10));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot11, sizeof(msg_bot11));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot12, sizeof(msg_bot12));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot13, sizeof(msg_bot13));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot14, sizeof(msg_bot14));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot15, sizeof(msg_bot15));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot16, sizeof(msg_bot16));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot17, sizeof(msg_bot17));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot18, sizeof(msg_bot18));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot19, sizeof(msg_bot19));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot20, sizeof(msg_bot20));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot21, sizeof(msg_bot21));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot22, sizeof(msg_bot22));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot23, sizeof(msg_bot23));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot24, sizeof(msg_bot24));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot25, sizeof(msg_bot25));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot26, sizeof(msg_bot26));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot27, sizeof(msg_bot27));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot28, sizeof(msg_bot28));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot29, sizeof(msg_bot29));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot30, sizeof(msg_bot30));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot31, sizeof(msg_bot31));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot32, sizeof(msg_bot32));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot33, sizeof(msg_bot33));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot34, sizeof(msg_bot34));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot35, sizeof(msg_bot35));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot36, sizeof(msg_bot36));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot37, sizeof(msg_bot37));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot38, sizeof(msg_bot38));
+    Serial.flush();
+    delay(10);
+    Serial.write(msg_bot39, sizeof(msg_bot39));
+    Serial.flush();
+} // END void msg_0x35 ()
+// =================================================================================
+void rotina_de_partida() { // rotina validade
+    Serial.write(0x00); //{0x00};
+    delay(10);
+    Serial.write(0x41); //{0x41,0x21};
+    Serial.write(0x21);
 } //void rotina_de_partida (){
-              
+// =================================================================================
 void limparVetor() {
-      for (size_t i = 0; i < length; i++) msg[i] = ' ';
-      msg[0] = '\0';
-      my_char.remove(0, my_char.length());
-      c_ctr         = 0; //= '\0'
+    for (size_t i = 0; i < length; i++) msg[i] = ' ';
+    msg[0] = '\0';
+    my_char.remove(0, my_char.length());
+    c_ctr = 0; //= '\0'
 } // END void limparVetor()
+// =================================================================================
+ 
 // =================================================================================
 ////// LOG DADOS RECEBIDOS ////// 
 /* 
