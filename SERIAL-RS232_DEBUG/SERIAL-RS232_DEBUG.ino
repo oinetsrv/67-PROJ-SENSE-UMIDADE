@@ -85,6 +85,7 @@ byte msg_bot40[] = {0x0D, 0x4E, 0x10, 0xF9, 0x10, 0xF9};
 byte msg_bot41[] = {0x0D, 0x4E, 0x0A, 0x2F, 0x0A, 0x2F};
 byte msg_bot42[] = {0x0D, 0x4E, 0x0A, 0x30, 0x0A, 0x30};
 byte msg_bot43[] = {0x0D, 0x44};
+byte msg_bot45[] = {0x0D, 0x30, 0x0C, 0x3A, 0x0E, 0x06, 0x18};
 byte msg_bot46[] = {0x0D, 0x30, 0x10, 0x15, 0x05, 0x06, 0x18}; // ANALISAR UMIDADE
 byte msg_bot47[] = {0x0D, 0x50, 0x41, 0x6E, 0x61, 0x6C, 0x69, 0x73, 0x61, 0x72, 0x20, 0x55, 0x6D, 0x69, 0x64, 0x61, 0x64, 0x65};
 byte msg_bot48[] = {0x0D, 0x30, 0x0F, 0x1B, 0x06, 0x06, 0x18};
@@ -171,28 +172,16 @@ void loop             (){
   // CONSIDERO CRIAR UM CASE NO FUTURO
   if (cont_partida <= 8  )    rotina_conexao  ();
   if (cont_partida >= 10 )    rotina_manut    ();
-   //if (cont_partida >= 13 )  // rot_milho_coloq ();
+   if (cont_partida >= 13 )   rot_milho_coloq ();
 
   // 10/06/24 PROXIMOS PASSOS
-  /* SEQUENCIA DE PASSOS PARA COLETAR DADOS
-        OK  1  - LIGAR APARELHO
-        OK  2  - CONECTAR PORTA USB
-        OK  3  - ABRIR APP
-        OK  4  - ESTABELECER CONEXÃO 
-        OK  5  - SELECIONAR PRODUTO milho
-        OK  6  - CLIQUE EM ANALIZAR
-        fazer até aqui
-        OK  7  - ESVAZIE O COPO 
-        OK  8  - CLIQUE EM CONTINUAR
-        OK  9  - CARREGAR PRODUTO
-        OK 10 - ANALISAR LEITURA
-        OK 11 - FINALIZAR PROCESSO                    */
+   
 
 } // END void loop()
 // ========================================================================
 void rot_milho_coloq  (){
     for (size_t i = 0; i < c_ctr; i++){
-        if (msg[i] == 0x3D && cont_partida == 13){
+        if (msg[i] == 0x3D && cont_partida > 13){
             cont_partida = 14;
             delay(300);
             Serial.write(msg_milho002, sizeof(msg_milho002));
@@ -435,8 +424,9 @@ void rotina_conexao (){
     }
     if (msg[i] == 0x35 && msg[i + 1] == 0x2E && cont_partida == 3){
         cont_partida = 4;
-        delay(9);
+        delay(10);
         msg_0x35();
+         
         i = c_ctr;
         limparVetor();
     }
@@ -448,7 +438,7 @@ void rotina_conexao (){
     }
     if (msg[i] == 0x01 && cont_partida == 5){
         cont_partida = 6;
-        delay(100);
+        delay(120);
         Serial.write(0x0D);
         Serial.write(0x57);
         i = c_ctr;
@@ -466,6 +456,17 @@ void rotina_conexao (){
         cont_partida = 10;
         delay(100);
         Serial.write(msg_bot46, sizeof(msg_bot46));
+        Serial.flush();
+        delay(15);
+        Serial.write(msg_bot47, sizeof(msg_bot47));
+        Serial.flush();
+        i = c_ctr;
+        limparVetor();
+    }
+    if (msg[i] == 0x02 && cont_partida == 7) {
+        cont_partida = 10;
+        delay(100);
+        Serial.write(msg_bot45, sizeof(msg_bot45));
         Serial.flush();
         delay(15);
         Serial.write(msg_bot47, sizeof(msg_bot47));
