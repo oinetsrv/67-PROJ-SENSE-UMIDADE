@@ -96,7 +96,7 @@ byte msg_bot48[] = {0x0D, 0x30, 0x0F, 0x1B, 0x06, 0x06, 0x18};
   byte msg_milho003[] = {0x0D, 0x50, 0x45, 0x73, 0x76, 0x61, 0x7A, 0x69, 0x61, 0x72, 0x20, 0x6F, 0x20, 0x63, 0x6F, 0x70, 0x6F, 0x20};  
   byte msg_milho004[] = {0x0D, 0x44};   
   byte msg_milho005[] = {0x0D, 0x57};   
-  byte msg_milho006[] = {0x0D, 0x45};   
+  byte msg_milho006[] = {0x0D, 0x30, 0x0E, 0x2D, 0x0E, 0x06, 0x18};   
   byte msg_milho007[] = {0x0D, 0x30, 0x0D, 0x21, 0x0D, 0x06, 0x18};  
   byte msg_milho008[] = {0x0D, 0x50, 0x43, 0x61, 0x6C, 0x69, 0x62, 0x2E, 0x20, 0x61, 0x20, 0x62, 0x61, 0x6C, 0x61, 0x6E, 0x63, 0x61};  
   byte msg_milho009[] = {0x0D, 0x49};   
@@ -145,11 +145,18 @@ void rotina_partida   ();
 void rotina_conexao   ();
 void rotina_manut     ();
 void rot_milho_coloq  ();
+void rot_encher       ();
 void temp_com_times   (int val); // função criada para substituir time
 
 void msg_0x23         ();
 void msg_0x35         ();
 void msg_0xFC         ();
+void msg_0x3D         ();
+void msg_0xFF_16      ();
+void msg_0xFF_19      ();
+void msg_0xFF_22      ();
+void msg_0xFF_24      ();
+void msg_0xFF_25      ();
 
 // =================================================================================
 // --- Configurações setup       ---
@@ -172,24 +179,32 @@ void loop             (){
   // CONSIDERO CRIAR UM CASE NO FUTURO
   if (cont_partida <= 8  )    rotina_conexao  ();
   if (cont_partida >= 10 )    rotina_manut    ();
-   if (cont_partida >= 13 )   rot_milho_coloq ();
+  if (cont_partida >= 13 )    rot_milho_coloq ();
 
   // 10/06/24 PROXIMOS PASSOS
    
 
 } // END void loop()
 // ========================================================================
+void rot_encher (){
+    for (size_t i = 0; i < c_ctr; i++){
+        f (msg[i] == 0x4D && cont_partida == 26){
+            
+            Serial.write(msg_milho008, sizeof(msg_milho008));
+
+        }
+
+    }// end for
+    
+
+}// END void rot_encher ()
+// ========================================================================
+
 void rot_milho_coloq  (){
     for (size_t i = 0; i < c_ctr; i++){
         if (msg[i] == 0x3D && cont_partida > 13){
             cont_partida = 14;
-            delay(300);
-            Serial.write(msg_milho002, sizeof(msg_milho002));
-            Serial.flush();
-            delay(76);
-            Serial.write(msg_milho003, sizeof(msg_milho003));
-            Serial.flush();
-            delay(2000);
+            msg_0x3D       ();
         }
         if (msg[i] == 0xFF && msg[i+1] == 0xFF && cont_partida == 14){
             cont_partida = 15;
@@ -205,15 +220,7 @@ void rot_milho_coloq  (){
         }
         if (msg[i] == 0xFF && cont_partida == 16){
             cont_partida = 17;
-            delay(79);
-            Serial.write(0x0D);
-            Serial.write(0x45);
-            delay(79);
-            Serial.write(msg_milho007, sizeof(msg_milho007));
-            Serial.flush();
-            delay(1000);
-            Serial.write(msg_milho008, sizeof(msg_milho008));
-            Serial.flush();
+            msg_0xFF_16       ();
         }
         if (msg[i] == 0xFF && cont_partida == 17){
             cont_partida = 18;
@@ -229,33 +236,7 @@ void rot_milho_coloq  (){
         }
         if (msg[i] == 0xFF && cont_partida == 19){
             cont_partida = 20;
-            delay(149);
-            Serial.write(0x0D);
-            Serial.write(0x46);
-            delay(36);
-            Serial.write(0x0D);
-            Serial.write(0x46);
-            delay(36);
-            Serial.write(0x0D);
-            Serial.write(0x46);
-            delay(36);
-            Serial.write(0x0D);
-            Serial.write(0x46);
-            delay(36);
-            Serial.write(0x0D);
-            Serial.write(0x46);
-            delay(36);
-            Serial.write(0x0D);
-            Serial.write(0x46);
-            delay(36);
-            Serial.write(0x0D);
-            Serial.write(0x46);
-            delay(36);
-            Serial.write(0x0D);
-            Serial.write(0x46);
-            delay(96);
-            Serial.write(0x0D);
-            Serial.write(0x48);
+            msg_0xFF_19     (); 
         }
         if (msg[i] == 0xFF && cont_partida == 20){
             cont_partida = 21;
@@ -271,18 +252,7 @@ void rot_milho_coloq  (){
         }
         if (msg[i] == 0xFF && msg[i+1] == 0xFF && cont_partida == 22){
             cont_partida = 23;
-            delay(28);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(28);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(28);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(80);
-            Serial.write(0x0D);
-            Serial.write(0x48);
+            msg_0xFF_22       (); 
         }
         if (msg[i] == 0xFF && msg[i+1] == 0xFF && cont_partida == 23){
             cont_partida = 24;
@@ -292,54 +262,21 @@ void rot_milho_coloq  (){
         }
         if (msg[i] == 0xFF && msg[i+1] == 0xFF && cont_partida == 24){
             cont_partida = 25;
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x4C);
-            delay(99);
-            Serial.write(0x0D);
-            Serial.write(0x4B);
+            msg_0xFF_24       ();
         }
         if (msg[i] == 0xFF && msg[i+1] == 0xFF && cont_partida == 25){
             cont_partida = 26;
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x47);
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x4C);
-            delay(30);
-            Serial.write(0x0D);
-            Serial.write(0x49);
-            delay(30);
+            msg_0xFF_25       ();
         }
- 
     } // END for
 }
 // ========================================================================
-
-// ========================================================================
-
+void rotina_partida (){
+    Serial.write(0x00);
+    delay(10);
+    Serial.write(0x41);
+    Serial.write(0x21);
+} // void rotina_partida (){
 // ========================================================================
 void rotina_manut   (){
   for (size_t i = 0; i < c_ctr; i++){
@@ -483,6 +420,131 @@ void temp_com_times (int val){
       // vai ficar aqui até atender o tempo definido em valor
     } // END if (millis() - tld_end >= 5000){
 } // END void temp_com_times ()
+
+// ========================================================================
+
+// ========================================================================
+
+// ========================================================================
+
+// ========================================================================
+
+// ========================================================================
+
+// ========================================================================
+void msg_0xFF_16       (){
+    delay(79);
+    Serial.write(0x0D);
+    Serial.write(0x45);
+    delay(79);
+    Serial.write(msg_milho007, sizeof(msg_milho007));
+    Serial.flush();
+    delay(1000);
+    Serial.write(msg_milho008, sizeof(msg_milho008));
+    Serial.flush();
+}// end void msg_0xFF_16       ()
+// ========================================================================
+void msg_0xFF_19       (){
+    delay(149);
+    Serial.write(0x0D);
+    Serial.write(0x46);
+    delay(36);
+    Serial.write(0x0D);
+    Serial.write(0x46);
+    delay(36);
+    Serial.write(0x0D);
+    Serial.write(0x46);
+    delay(36);
+    Serial.write(0x0D);
+    Serial.write(0x46);
+    delay(36);
+    Serial.write(0x0D);
+    Serial.write(0x46);
+    delay(36);
+    Serial.write(0x0D);
+    Serial.write(0x46);
+    delay(36);
+    Serial.write(0x0D);
+    Serial.write(0x46);
+    delay(36);
+    Serial.write(0x0D);
+    Serial.write(0x46);
+    delay(96);
+    Serial.write(0x0D);
+    Serial.write(0x48);
+} // END void msg_0xFF_19       ()
+// ========================================================================
+void msg_0xFF_22       (){
+    delay(28);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(28);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(28);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(80);
+    Serial.write(0x0D);
+    Serial.write(0x48);
+} // END void msg_0xFF_22       ()
+// ========================================================================
+void msg_0xFF_24       (){
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x4C);
+    delay(99);
+    Serial.write(0x0D);
+    Serial.write(0x4B);
+} // END void msg_0xFF_24       ()
+// ========================================================================
+void msg_0xFF_25       (){
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x47);
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x4C);
+    delay(30);
+    Serial.write(0x0D);
+    Serial.write(0x49);
+    delay(30);
+}// END void msg_0xFF_25       ()
+// ========================================================================
+
+// ========================================================================
+// ========================================================================
+// ========================================================================
+void msg_0x3D       (){
+    delay(300);
+    Serial.write(msg_milho002, sizeof(msg_milho002));
+    Serial.flush();
+    delay(76);
+    Serial.write(msg_milho003, sizeof(msg_milho003));
+    Serial.flush();
+    delay(2000);
+}// end void msg_0xFC       ()
 // ========================================================================
 void msg_0xFC       (){
     delay(24);
@@ -614,12 +676,6 @@ void msg_0x35       (){
     Serial.flush();
 } // END void msg_0x35 ()
 // ========================================================================
-void rotina_partida (){
-    Serial.write(0x00);
-    delay(10);
-    Serial.write(0x41);
-    Serial.write(0x21);
-} // void rotina_partida (){
 // ========================================================================
 void limparVetor    (){
     for (size_t i = 0; i < length; i++){
