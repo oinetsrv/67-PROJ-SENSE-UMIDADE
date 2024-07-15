@@ -70,12 +70,12 @@ int sequencia = 0,
     // volatile  joga para memoria ram e nao para os registradores
     // ganha velocidade
 volatile  byte m_b001[] = { B00000000, B00000000, B00000000, B00000000, 
-                  B00000000, B00000000, B00000000, B00000000, 
-                  B00000000, B00000000, B00000000, B00000000, 
-                  B00000000, B00000000, B00000000, B00000000, 
-                  B00000000, B00000000, B00000000, B00000000, 
-                  B00000000, B00000000, B00000000, B00000000, 
-                  B00000000, B00000000, B00000000, B00000000};
+                            B00000000, B00000000, B00000000, B00000000, 
+                            B00000000, B00000000, B00000000, B00000000, 
+                            B00000000, B00000000, B00000000, B00000000, 
+                            B00000000, B00000000, B00000000, B00000000, 
+                            B00000000, B00000000, B00000000, B00000000, 
+                            B00000000, B00000000, B00000000, B00000000};
 volatile  byte m_b002 = B00000000;
 byte rs_b01 = B00000000;
 byte m_b004[] = {B00000000, B00000000};
@@ -113,13 +113,13 @@ void setup() {
   PORTD &= ~(1<<6); // FORÇA FICAR EM LOW PIN 6
   PORTD &= ~(1<<7); // FORÇA FICAR EM LOW PIN 7
   Serial.begin       (9600     );
-  Serial.println     ("display");
+  Serial.println     ("displaydebug");
   tld_end = millis();
 /*  LOW acionar a interrupção quando o estado do pino for LOW,
     CHANGE acionar a interrupção quando o sempre estado do pino mudar
     RISING acionar a interrupção quando o estado do pino for de LOW para HIGH apenas,
     FALLING acionar a interrupção quando o estado do pino for de HIGH para LOW apenas. */
-  attachInterrupt(digitalPinToInterrupt(rs), blink, RISING); // sempre que o rs subir
+  attachInterrupt(digitalPinToInterrupt(en), blink, RISING); // sempre que o rs subir
 } //end setup
 
 // =====================================================================================
@@ -128,27 +128,24 @@ void loop() {
 if (dataReady) {
     for (size_t i = 0; i < sizeof(m_b001); i += 2) {
         rs_b01 = m_b001[i+1] + (m_b001[i] << 4);
-        Serial.println(m_b002, BIN); // dado bruto
-        Serial.print(" ");
-    }
-    j = 0;
-    for (size_t i = 0; i < sizeof(m_b001); i++) m_b001[i] = B00000000;
-    Serial.println("");
-    /*
-    for (size_t i = 0; i < sizeof(m_b001); i += 2) {
-        rs_b01 = m_b001[i+1] + (m_b001[i] << 4);
+        //Serial.println(m_b002, BIN); // dado bruto
         //Serial.println(rs_b01, BIN);
         //Serial.println(rs_b01, HEX);
         Serial.print((char)rs_b01);
+        Serial.print(" ");
     }
-    */
+    k = 0;
+    m_b002 = B00000000;
+    for (size_t i = 0; i < sizeof(m_b001); i++) m_b001[i] = B00000000;
+    Serial.println("");
+ 
    // deixar o codigo pronto para o meu controle de display
    // testar hello word no esp32 
    // testar interrupção no esp32
    // testar codigo no display 
    // testar tempo de resposta
    // achar um meio de coletar os dados
-   
+
     dataReady = false; // Reset the data ready flag
   }// END if (dataReady)
 } //end loop
@@ -156,7 +153,7 @@ if (dataReady) {
 // =====================================================================================
 // --- Desenvolvimento das Funções ---
 void blink2(){
-    //PORTB &= ~(1<<1); // FORÇA FICAR EM LOW PIN 9  rw
+  //PORTB &= ~(1<<1); // FORÇA FICAR EM LOW PIN 9  rw
   //PORTB &= ~(1<<2); // FORÇA FICAR EM LOW PIN 10 rs
   //PORTB &= ~(1<<3); // FORÇA FICAR EM LOW PIN 11 en
   PORTB |=  (1<<1); // ativar rw pin 9 para ler
@@ -170,23 +167,18 @@ void blink2(){
   delayMicroseconds(2);
   PORTB &= ~(1<<3);
   delayMicroseconds(16);
-// tenta ler os dados na ram do display
- 
 }// END void blink2(){
 void blink() {
-PORTB |=  (1<<1); // FORÇA FICAR EM HIGH PIN 9 // medir tempo
+//PORTB |=  (1<<1); // FORÇA FICAR EM HIGH PIN 9 // medir tempo
   PORTD = (PIND & (1 << 7) ? (m_b002 |= (1 << 0)) : (m_b002 &= ~(1 << 0))); // db4
   PORTD = (PIND & (1 << 6) ? (m_b002 |= (1 << 1)) : (m_b002 &= ~(1 << 1))); // db5
   PORTD = (PIND & (1 << 5) ? (m_b002 |= (1 << 2)) : (m_b002 &= ~(1 << 2))); // db6
   PORTD = (PIND & (1 << 4) ? (m_b002 |= (1 << 3)) : (m_b002 &= ~(1 << 3))); // db7
-PORTB &= ~(1<<1); // FORÇA FICAR EM LOW PIN 9 // medir tempo  
+//PORTB &= ~(1<<1); // FORÇA FICAR EM LOW PIN 9 // medir tempo  
+m_b001[k] = m_b002;
 k++;
-if (k>16) {
-      dataReady = true;
-      k = 0;
-    }
-    
-    
+if (k>13) dataReady = true;
+ 
 
 } // END void blink() 
 
@@ -209,7 +201,7 @@ A 41  0100 0001
 F 46  0100 0110 X
 A 41  0100 0001 
 0010
- 
+ ALFAFA
  */
 
 // =====================================================================================
