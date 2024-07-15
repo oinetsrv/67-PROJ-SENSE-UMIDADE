@@ -41,10 +41,11 @@ void setup() {
 // =====================================================================================
 // --- Loop Infinito ---
 void loop            (     ) {
-      //delay       (3000 );
-      //lcd.print   ("HELLO WORLD"  );
-      //delay       (3000 );
-      //lcd.clear   (     );
+      lcd.clear   (     );
+      delay(4000);
+      lcd.print   ("ALFAFA"  );
+      delay(4000);
+ 
    /* D7 D6 D5 D4       D7 D6 D5 D4       os quatro primeiros bits BYTE HEX 48
       0  1  0  0        1  0  0  0  */
 } //end loop
