@@ -36,15 +36,15 @@ void setup() {
       pinMode(pi2,  INPUT);
       lcd.clear   (     );
       delay       (1000 );
-      lcd.print   ("HELLO WORLD"  );
+      //lcd.print   ("HELLO WORLD"  );
 } //end setup
 // =====================================================================================
 // --- Loop Infinito ---
 void loop            (     ) {
       lcd.clear   (     );
       delay(4000);
-      //lcd.print   ("ALFAFA"  );
-      lcd.print   ("ANALIZAR UMIDADE"  );
+      lcd.print   ("ALFAFA"  );
+      //lcd.print   ("ANALIZAR UMIDADE"  );
       delay(4000);
  
    /* D7 D6 D5 D4       D7 D6 D5 D4       os quatro primeiros bits BYTE HEX 48

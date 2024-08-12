@@ -21,31 +21,16 @@
 // --- Mapeamento de Hardware       ---
 // --- Instâncias                   ---
 // =================================================================================
-// --- Bibliotecas Auxiliares       ---
-// =====================================================================================
-// --- Mapeamento de Hardware       ---
+
+ /*
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "esp_spi_flash.h"
+#include "rom/gpio.h" // PARA CORRIGIR ERROS DE IDENTIFICAR PORTAS
+#include "driver/gpio.h"
  
-// =====================================================================================
-// --- Configurações Iniciais       ---
-#define led_azul 21
-void setup() {
-
-  pinMode(led_azul, OUTPUT);
-   
-} //end setup
-
-// =====================================================================================
-// --- Loop Infinito ---
-void loop() {
-  digitalWrite(led_azul,HIGH);
-  delay(1000);
  
-} //end loop
+ */
  
-// =====================================================================================
-// --- Desenvolvimento das Funções --- 
-// =====================================================================================
-// --- Final do Programa ---
-
-
 
